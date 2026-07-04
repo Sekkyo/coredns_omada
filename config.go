@@ -144,7 +144,7 @@ func parse(c *caddy.Controller) (config config, err error) {
 
 	validate := validator.New()
 	if err := validate.Struct(config); err != nil {
-		log.Info("There is a Corefile configuration error:")
+		log.Infof("There is a Corefile configuration error: %v", err)
 		return config, err
 	}
 

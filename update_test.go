@@ -99,14 +99,16 @@ func TestUpdate(t *testing.T) {
 
 	tests := []testCases{
 		{ // foward resolve: client
-			qname:      "client-001.omada.home.",
-			qtype:      dns.TypeA,
-			wantAnswer: []string{"client-001.omada.home.	60	IN	A	10.0.0.101"},
+			qname:                  "client-001.omada.home.",
+			qtype:                  dns.TypeA,
+			wantAnswer:             []string{"client-001.omada.home.	60	IN	A	10.0.0.101"},
+			wantRecursionAvailable: true,
 		},
 		{ // foward resolve: DHCP reservation
-			qname:      "client-01.omada.home.",
-			qtype:      dns.TypeA,
-			wantAnswer: []string{"client-01.omada.home.	60	IN	A	10.0.0.101"},
+			qname:                  "client-01.omada.home.",
+			qtype:                  dns.TypeA,
+			wantAnswer:             []string{"client-01.omada.home.	60	IN	A	10.0.0.101"},
+			wantRecursionAvailable: true,
 		},
 		{ // disabled DHCP reservation
 			qname:        "disabled-dhcp-01.omada.home.",
@@ -121,20 +123,23 @@ func TestUpdate(t *testing.T) {
 			wantMsgRCode: dns.RcodeServerFailure,
 		},
 		{ // ptr resolve: client
-			qname:      "102.0.0.10.in-addr.arpa.",
-			qtype:      dns.TypePTR,
-			wantAnswer: []string{"102.0.0.10.in-addr.arpa.	60	IN	PTR	win10-vm.omada.home."},
+			qname:                  "102.0.0.10.in-addr.arpa.",
+			qtype:                  dns.TypePTR,
+			wantAnswer:             []string{"102.0.0.10.in-addr.arpa.	60	IN	PTR	win10-vm.omada.home."},
+			wantRecursionAvailable: true,
 		},
 		{ // ptr - DHCP reservation takes priority over client
-			qname:      "101.0.0.10.in-addr.arpa.",
-			qtype:      dns.TypePTR,
-			wantAnswer: []string{"101.0.0.10.in-addr.arpa.	60	IN	PTR	client-01.omada.home."},
+			qname:                  "101.0.0.10.in-addr.arpa.",
+			qtype:                  dns.TypePTR,
+			wantAnswer:             []string{"101.0.0.10.in-addr.arpa.	60	IN	PTR	client-01.omada.home."},
+			wantRecursionAvailable: true,
 		},
 		// wildcard dhcp reservation
 		{
-			qname:      "test.kubernetes.omada.home",
-			qtype:      dns.TypeA,
-			wantAnswer: []string{"test.kubernetes.omada.home.	60	IN	A	10.0.0.150"},
+			qname:                  "test.kubernetes.omada.home",
+			qtype:                  dns.TypeA,
+			wantAnswer:             []string{"test.kubernetes.omada.home.	60	IN	A	10.0.0.150"},
+			wantRecursionAvailable: true,
 		},
 	}
 	executeTestCases(t, testOmada, tests)

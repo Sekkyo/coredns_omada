@@ -84,6 +84,10 @@ type testCases struct {
 	wantMsgRCode int
 	wantNS       []string
 	expectedErr  error
+	// wantRecursionAvailable only applies to responses the omada plugin
+	// answers itself; fallthrough responses come from the injected Next
+	// handler in these tests, which doesn't set it either way.
+	wantRecursionAvailable bool
 }
 
 func TestOmadaWithFallthrough(t *testing.T) {
@@ -102,9 +106,10 @@ func TestOmadaWithFallthrough(t *testing.T) {
 
 	tests := []testCases{
 		{
-			qname:      "client1.omada.test.",
-			qtype:      dns.TypeA,
-			wantAnswer: []string{"client1.omada.test.	60	IN	A	192.168.0.101"},
+			qname:                  "client1.omada.test.",
+			qtype:                  dns.TypeA,
+			wantAnswer:             []string{"client1.omada.test.	60	IN	A	192.168.0.101"},
+			wantRecursionAvailable: true,
 		},
 		{
 			qname:        "client4.omada.test.",
@@ -119,9 +124,10 @@ func TestOmadaWithFallthrough(t *testing.T) {
 			wantMsgRCode: dns.RcodeServerFailure,
 		},
 		{
-			qname:      "101.0.168.192.in-addr.arpa.",
-			qtype:      dns.TypePTR,
-			wantAnswer: []string{"101.0.168.192.in-addr.arpa.	60	IN	PTR	client1.omada.test."},
+			qname:                  "101.0.168.192.in-addr.arpa.",
+			qtype:                  dns.TypePTR,
+			wantAnswer:             []string{"101.0.168.192.in-addr.arpa.	60	IN	PTR	client1.omada.test."},
+			wantRecursionAvailable: true,
 		},
 		{
 			qname:      "fallthrough.omada.test.",
@@ -145,23 +151,26 @@ func TestOmadaWithoutFallthrough(t *testing.T) {
 	tests := []testCases{
 		{
 			// expected success, since record exists in zone
-			qname:      "client1.omada.test.",
-			qtype:      dns.TypeA,
-			wantAnswer: []string{"client1.omada.test.	60	IN	A	192.168.0.101"},
+			qname:                  "client1.omada.test.",
+			qtype:                  dns.TypeA,
+			wantAnswer:             []string{"client1.omada.test.	60	IN	A	192.168.0.101"},
+			wantRecursionAvailable: true,
 		},
 		{
 			// expected NXDOMAIN, since record does not exist in zone and fallthrough is disabled
-			qname:        "client4.omada.test.",
-			qtype:        dns.TypeA,
-			wantMsgRCode: dns.RcodeNameError,
-			wantNS:       []string{"omada.test.\t300\tIN\tSOA\tns.omada.test. hostmaster.omada.test. 1 7200 3600 86400 300"},
+			qname:                  "client4.omada.test.",
+			qtype:                  dns.TypeA,
+			wantMsgRCode:           dns.RcodeNameError,
+			wantNS:                 []string{"omada.test.\t300\tIN\tSOA\tns.omada.test. hostmaster.omada.test. 1 7200 3600 86400 300"},
+			wantRecursionAvailable: true,
 		},
 		{
 			// expected NXDOMAIN, since record does not exist in zone and fallthrough is disabled
-			qname:        "fallthrough.omada.test.",
-			qtype:        dns.TypeA,
-			wantMsgRCode: dns.RcodeNameError,
-			wantNS:       []string{"omada.test.\t300\tIN\tSOA\tns.omada.test. hostmaster.omada.test. 1 7200 3600 86400 300"},
+			qname:                  "fallthrough.omada.test.",
+			qtype:                  dns.TypeA,
+			wantRecursionAvailable: true,
+			wantMsgRCode:           dns.RcodeNameError,
+			wantNS:                 []string{"omada.test.\t300\tIN\tSOA\tns.omada.test. hostmaster.omada.test. 1 7200 3600 86400 300"},
 		},
 	}
 	executeTestCases(t, testOmada, tests)
@@ -187,6 +196,10 @@ func executeTestCases(t *testing.T, omada *Omada, testCases []testCases) {
 
 		if tc.wantMsgRCode != rec.Msg.Rcode {
 			t.Errorf("Test %d: Unexpected msg status code. Want: %s, got: %s", ti, dns.RcodeToString[tc.wantMsgRCode], dns.RcodeToString[rec.Msg.Rcode])
+		}
+
+		if tc.wantRecursionAvailable != rec.Msg.RecursionAvailable {
+			t.Errorf("Test %d: Unexpected RecursionAvailable flag. Want: %v, got: %v", ti, tc.wantRecursionAvailable, rec.Msg.RecursionAvailable)
 		}
 
 		if len(tc.wantAnswer) != len(rec.Msg.Answer) {
