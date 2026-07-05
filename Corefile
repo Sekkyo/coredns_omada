@@ -8,6 +8,7 @@
         refresh_minutes 1
         ignore_startup_errors {$OMADA_IGNORE_STARTUP_ERRORS}
         fallthrough {$FALLTHROUGH_ZONES}
+        recursion_available {$RECURSION_AVAILABLE}
     }
     forward . {$UPSTREAM_DNS}
 }
