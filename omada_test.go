@@ -84,9 +84,11 @@ type testCases struct {
 	wantMsgRCode int
 	wantNS       []string
 	expectedErr  error
-	// wantRecursionAvailable only applies to responses the omada plugin
-	// answers itself; fallthrough responses come from the injected Next
-	// handler in these tests, which doesn't set it either way.
+	// wantRecursionAvailable is asserted against every test case's response.
+	// For fallthrough-to-Next cases, the expected value should be whatever
+	// the injected Next handler in these tests actually sets (currently
+	// nothing, i.e. false) - it isn't skipped for those cases, it just
+	// reflects a different code path than the one this plugin controls.
 	wantRecursionAvailable bool
 }
 
@@ -182,6 +184,7 @@ func TestOmadaWithoutFallthrough(t *testing.T) {
 			// expected NXDOMAIN, since record does not exist in zone and fallthrough is disabled
 			qname:                  "client4.omada.test.",
 			qtype:                  dns.TypeA,
+			wantRetCode:            dns.RcodeNameError,
 			wantMsgRCode:           dns.RcodeNameError,
 			wantNS:                 []string{"omada.test.\t300\tIN\tSOA\tns.omada.test. hostmaster.omada.test. 1 7200 3600 86400 300"},
 			wantRecursionAvailable: true,
@@ -190,6 +193,7 @@ func TestOmadaWithoutFallthrough(t *testing.T) {
 			// expected NXDOMAIN, since record does not exist in zone and fallthrough is disabled
 			qname:                  "fallthrough.omada.test.",
 			qtype:                  dns.TypeA,
+			wantRetCode:            dns.RcodeNameError,
 			wantRecursionAvailable: true,
 			wantMsgRCode:           dns.RcodeNameError,
 			wantNS:                 []string{"omada.test.\t300\tIN\tSOA\tns.omada.test. hostmaster.omada.test. 1 7200 3600 86400 300"},

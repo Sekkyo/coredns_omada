@@ -22,11 +22,12 @@ type config struct {
 	stale_record_duration     time.Duration // duration to keep serving stale records for clients no longer present in the controller)
 	ignore_startup_errors     bool          // ignore any errors during the initial zone refresh
 	fallthrough_zones         *[]string     // list of fallthrough zones
-	// Whether responses this plugin answers advertise recursion support. This
-	// plugin is normally paired with a `forward` plugin for everything outside
-	// its managed zones, so the server as a whole typically does support
-	// recursion - defaults to true to reflect that common setup. Set to false
-	// if this plugin is run with no recursive resolver anywhere in the chain.
+	// Whether responses this plugin answers advertise recursion support.
+	// Defaults to false: this plugin has no way to know whether the rest of
+	// the Corefile actually provides recursion (e.g. a `forward` plugin for
+	// everything outside its managed zones), so it can't assume that on
+	// anyone's behalf. Set to true explicitly if this deployment does pair
+	// it with a recursive resolver elsewhere in the chain.
 	recursion_available bool
 }
 
@@ -40,7 +41,7 @@ func parse(c *caddy.Controller) (config config, err error) {
 	config.resolve_dhcp_reservations = true
 	config.stale_record_duration, _ = time.ParseDuration("10m")
 	config.ignore_startup_errors = false
-	config.recursion_available = true
+	config.recursion_available = false
 
 	for c.Next() {
 
