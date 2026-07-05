@@ -74,13 +74,12 @@ func (o *Omada) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) 
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.Authoritative = true
-	// Leaving RecursionAvailable unset causes stub resolvers that track
-	// multiple configured nameservers (e.g. macOS) to treat this server as
-	// non-recursive and fall through to the next nameserver in their list,
-	// even for a fully answered, correct query. Defaults to true since this
-	// plugin is normally paired with a `forward` plugin for anything outside
-	// its managed zones; set `recursion_available false` in the Corefile if
-	// that's not the case for this deployment.
+	// A resolver that thinks it doesn't get recursion here (the default) may
+	// treat this server as non-recursive and fall through to the next
+	// configured nameserver in its list, even for a fully answered, correct
+	// query - if this deployment does pair the plugin with a recursive
+	// resolver elsewhere in the Corefile (e.g. `forward`), set
+	// `recursion_available true` to advertise that.
 	m.RecursionAvailable = o.config.recursion_available
 	var result file.Result
 

@@ -143,3 +143,38 @@ func TestConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestConfigRecursionAvailableDefaultsToFalse(t *testing.T) {
+	c := caddy.NewTestController("dns", `omada {
+		controller_url https://10.0.0.1
+		username test
+		password test
+		site .*
+}`)
+
+	config, err := parse(c)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if config.recursion_available {
+		t.Fatalf("Expected recursion_available to default to false when omitted from the Corefile")
+	}
+}
+
+func TestConfigRecursionAvailableCanBeEnabledExplicitly(t *testing.T) {
+	c := caddy.NewTestController("dns", `omada {
+		controller_url https://10.0.0.1
+		username test
+		password test
+		site .*
+		recursion_available true
+}`)
+
+	config, err := parse(c)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if !config.recursion_available {
+		t.Fatalf("Expected recursion_available to be true when explicitly set in the Corefile")
+	}
+}
