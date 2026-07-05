@@ -112,7 +112,7 @@ func (o *Omada) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) 
 		log.Debugf("--  error writing message: %v\n", err)
 		return dns.RcodeServerFailure, err
 	}
-	return dns.RcodeSuccess, nil
+	return m.Rcode, nil
 }
 
 func (o *Omada) Name() string { return "omada" }
