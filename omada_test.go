@@ -102,6 +102,7 @@ func TestOmadaWithFallthrough(t *testing.T) {
 		zoneNames: []string{"omada.test.", ptrZone},
 		zones:     testZones(),
 		Fall:      f,
+		config:    config{recursion_available: true},
 	}
 
 	tests := []testCases{
@@ -137,6 +138,26 @@ func TestOmadaWithFallthrough(t *testing.T) {
 	}
 	executeTestCases(t, testOmada, tests)
 }
+
+func TestOmadaRecursionAvailableIsConfigurable(t *testing.T) {
+	var testOmada = &Omada{
+		Next:      testHandler(),
+		zoneNames: []string{"omada.test.", ptrZone},
+		zones:     testZones(),
+		config:    config{recursion_available: false},
+	}
+
+	tests := []testCases{
+		{
+			qname:                  "client1.omada.test.",
+			qtype:                  dns.TypeA,
+			wantAnswer:             []string{"client1.omada.test.	60	IN	A	192.168.0.101"},
+			wantRecursionAvailable: false,
+		},
+	}
+	executeTestCases(t, testOmada, tests)
+}
+
 func TestOmadaWithoutFallthrough(t *testing.T) {
 
 	// clog.D.Set()
@@ -147,6 +168,7 @@ func TestOmadaWithoutFallthrough(t *testing.T) {
 		zoneNames: []string{"omada.test.", ptrZone},
 		zones:     testZones(),
 		Fall:      f,
+		config:    config{recursion_available: true},
 	}
 	tests := []testCases{
 		{

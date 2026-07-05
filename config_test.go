@@ -22,6 +22,7 @@ func TestConfig(t *testing.T) {
 			resolve_devices true
 			resolve_dhcp_reservations true
 			stale_record_duration 10m
+			recursion_available true
 			fallthrough
 }`, false},
 
@@ -123,6 +124,15 @@ func TestConfig(t *testing.T) {
 			password test
 			site .*
 			ignore_startup_errors zzz
+}`, true},
+
+		// invalid value: recursion_available
+		{`omada {
+			controller_url https://10.0.0.1
+			username test
+			password test
+			site .*
+			recursion_available zzz
 }`, true},
 	}
 

@@ -74,13 +74,14 @@ func (o *Omada) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) 
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.Authoritative = true
-	// The Corefile typically pairs this plugin with a `forward` plugin for
-	// anything outside its managed zones, so the server as a whole does
-	// support recursion. Leaving this unset causes stub resolvers that
-	// track multiple configured nameservers (e.g. macOS) to treat this
-	// server as non-recursive and fall through to the next nameserver in
-	// their list, even for a fully answered, correct query.
-	m.RecursionAvailable = true
+	// Leaving RecursionAvailable unset causes stub resolvers that track
+	// multiple configured nameservers (e.g. macOS) to treat this server as
+	// non-recursive and fall through to the next nameserver in their list,
+	// even for a fully answered, correct query. Defaults to true since this
+	// plugin is normally paired with a `forward` plugin for anything outside
+	// its managed zones; set `recursion_available false` in the Corefile if
+	// that's not the case for this deployment.
+	m.RecursionAvailable = o.config.recursion_available
 	var result file.Result
 
 	// lookup record in zones
@@ -105,7 +106,7 @@ func (o *Omada) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) 
 		m.Authoritative = false
 	case file.ServerFailure:
 		log.Debugf("--  RcodeServerFailure")
-		return dns.RcodeServerFailure, nil
+		m.Rcode = dns.RcodeServerFailure
 	}
 	err := w.WriteMsg(m)
 	if err != nil {

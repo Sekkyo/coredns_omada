@@ -76,6 +76,7 @@ func TestUpdate(t *testing.T) {
 	testOmada.config.resolve_devices = true
 	testOmada.config.resolve_dhcp_reservations = true
 	testOmada.config.stale_record_duration, _ = time.ParseDuration("5m")
+	testOmada.config.recursion_available = true
 
 	var fall fall.F
 	fall.SetZonesFromArgs([]string{})
@@ -98,13 +99,13 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, 13, testOmada.zones["omada.home."].Count)
 
 	tests := []testCases{
-		{ // foward resolve: client
+		{ // forward resolve: client
 			qname:                  "client-001.omada.home.",
 			qtype:                  dns.TypeA,
 			wantAnswer:             []string{"client-001.omada.home.	60	IN	A	10.0.0.101"},
 			wantRecursionAvailable: true,
 		},
-		{ // foward resolve: DHCP reservation
+		{ // forward resolve: DHCP reservation
 			qname:                  "client-01.omada.home.",
 			qtype:                  dns.TypeA,
 			wantAnswer:             []string{"client-01.omada.home.	60	IN	A	10.0.0.101"},
